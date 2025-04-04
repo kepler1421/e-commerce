@@ -43,21 +43,10 @@
 
         <div v-else class="row">
           <div v-for="product in filteredProducts" :key="product.id" class="col-md-4 mb-4">
-            <div class="card h-100">
-              <router-link :to="'/products/' + product.id" class="text-decoration-none">
-                <img :src="product.image" class="card-img-top p-3" :alt="product.title" style="height: 200px; object-fit: contain;">
-                <div class="card-body d-flex flex-column">
-                  <h5 class="card-title text-dark">{{ product.title }}</h5>
-                  <p class="card-text flex-grow-1 text-secondary">{{ product.description.substring(0, 100) }}...</p>
-                  <div class="d-flex justify-content-between align-items-center mt-auto">
-                    <span class="price">${{ product.price }}</span>
-                  </div>
-                </div>
-              </router-link>
-              <div class="card-footer bg-transparent border-top-0">
-                <button class="btn btn-primary w-100" @click="addToCart(product)">Add to Cart</button>
-              </div>
-            </div>
+            <ProductCard 
+              :product="product" 
+              @add-to-cart="addToCart"
+            />
           </div>
         </div>
       </div>
@@ -68,6 +57,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useCartStore } from '@/stores/cart'
+import ProductCard from '@/components/ProductCard.vue'
 
 const products = ref([])
 const categories = ref([])
@@ -90,7 +80,13 @@ const fetchProducts = async () => {
     loading.value = true
     const response = await fetch('https://fakestoreapi.com/products')
     if (!response.ok) throw new Error('Failed to fetch products')
-    products.value = await response.json()
+    const data = await response.json()
+    // Add rating data to products
+    products.value = data.map(product => ({
+      ...product,
+      rating: Math.floor(Math.random() * 5) + 1, // Random rating between 1-5
+      rating_count: Math.floor(Math.random() * 100) // Random number of ratings
+    }))
   } catch (err) {
     error.value = 'Failed to load products'
   } finally {
