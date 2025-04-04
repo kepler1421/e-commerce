@@ -46,7 +46,7 @@
         <div class="d-flex gap-2">
           <div class="input-group" style="width: 150px;">
             <button class="btn btn-outline-secondary" type="button" @click="decrementQuantity">-</button>
-            <input type="number" class="form-control text-center" v-model="quantity" min="1">
+            <input type="number" class="form-control text-center" v-model.number="quantity" min="1">
             <button class="btn btn-outline-secondary" type="button" @click="incrementQuantity">+</button>
           </div>
           
@@ -59,57 +59,59 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+<script>
 import { useCartStore } from '@/stores/cart'
 
-const route = useRoute()
-const cartStore = useCartStore()
-
-const product = ref(null)
-const loading = ref(true)
-const error = ref(null)
-const quantity = ref(1)
-
-const fetchProduct = async () => {
-  try {
-    loading.value = true
-    const response = await fetch(`https://fakestoreapi.com/products/${route.params.id}`)
-    if (!response.ok) throw new Error('Failed to fetch product')
-    product.value = await response.json()
-  } catch (err) {
-    error.value = 'Failed to load product details'
-  } finally {
-    loading.value = false
+export default {
+  data() {
+    return {
+      product: {},
+      loading: true,
+      error: null,
+      quantity: 1
+    }
+  },
+  computed: {
+    productId() {
+      return this.$route.params.id
+    }
+  },
+  methods: {
+    async fetchProduct() {
+      this.loading = true
+      try {
+        const response = await fetch(`https://fakestoreapi.com/products/${this.productId}`)
+        if (!response.ok) throw new Error('Failed to fetch product')
+        this.product = await response.json()
+      } catch (err) {
+        this.error = 'Failed to load product details'
+      } finally {
+        this.loading = false
+      }
+    },
+    incrementQuantity() {
+      this.quantity++
+    },
+    decrementQuantity() {
+      if (this.quantity > 1) {
+        this.quantity--
+      }
+    },
+    addToCart() {
+      const cartStore = useCartStore()
+      cartStore.addItem({
+        id: this.product.id,
+        title: this.product.title,
+        price: this.product.price,
+        image: this.product.image,
+        quantity: this.quantity
+      })
+    }
+  },
+  mounted() {
+    this.fetchProduct()
   }
 }
-
-const incrementQuantity = () => {
-  quantity.value++
-}
-
-const decrementQuantity = () => {
-  if (quantity.value > 1) {
-    quantity.value--
-  }
-}
-
-const addToCart = () => {
-  if (product.value) {
-    cartStore.addItem({
-      id: product.value.id,
-      title: product.value.title,
-      price: product.value.price,
-      image: product.value.image,
-      quantity: quantity.value
-    })
-  }
-}
-
-onMounted(() => {
-  fetchProduct()
-})
 </script>
 
 <style scoped>
@@ -127,4 +129,4 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
-</style> 
+</style>

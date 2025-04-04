@@ -54,69 +54,73 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useCartStore } from '@/stores/cart'
+<script>
+import { productApi } from '@/services/api'
 import ProductCard from '@/components/ProductCard.vue'
+import { useCartStore } from '@/stores/cart'
 
-const products = ref([])
-const categories = ref([])
-const selectedCategory = ref(null)
-const loading = ref(true)
-const error = ref(null)
-const cartStore = useCartStore()
-
-const fetchCategories = async () => {
-  try {
-    const response = await fetch('https://fakestoreapi.com/products/categories')
-    categories.value = await response.json()
-  } catch (err) {
-    console.error('Error fetching categories:', err)
+export default {
+  components: {
+    ProductCard
+  },
+  data() {
+    return {
+      products: [],
+      categories: [],
+      selectedCategory: null,
+      loading: true,
+      error: null
+    }
+  },
+  computed: {
+    filteredProducts() {
+      if (!this.selectedCategory) return this.products
+      return this.products.filter(product => product.category === this.selectedCategory)
+    }
+  },
+  methods: {
+    async fetchProducts() {
+      try {
+        this.loading = true
+        const data = await productApi.getAllProducts()
+        this.products = data.map(product => ({
+          ...product,
+          rating: Math.floor(Math.random() * 5) + 1,
+          rating_count: Math.floor(Math.random() * 100)
+        }))
+      } catch (err) {
+        this.error = 'Failed to load products'
+      } finally {
+        this.loading = false
+      }
+    },
+    async fetchCategories() {
+      try {
+        this.categories = await productApi.getCategories()
+      } catch (err) {
+        console.error('Error loading categories:', err)
+      }
+    },
+    selectCategory(category) {
+      this.selectedCategory = category
+    },
+    addToCart(product) {
+      const cartStore = useCartStore()
+      cartStore.addItem({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        quantity: 1
+      })
+    }
+  },
+  async mounted() {
+    await Promise.all([this.fetchProducts(), this.fetchCategories()])
   }
 }
-
-const fetchProducts = async () => {
-  try {
-    loading.value = true
-    const response = await fetch('https://fakestoreapi.com/products')
-    if (!response.ok) throw new Error('Failed to fetch products')
-    const data = await response.json()
-    // Add rating data to products
-    products.value = data.map(product => ({
-      ...product,
-      rating: Math.floor(Math.random() * 5) + 1, // Random rating between 1-5
-      rating_count: Math.floor(Math.random() * 100) // Random number of ratings
-    }))
-  } catch (err) {
-    error.value = 'Failed to load products'
-  } finally {
-    loading.value = false
-  }
-}
-
-const filteredProducts = computed(() => {
-  if (!selectedCategory.value) return products.value
-  return products.value.filter(product => product.category === selectedCategory.value)
-})
-
-const selectCategory = (category) => {
-  selectedCategory.value = category
-}
-
-const addToCart = (product) => {
-  cartStore.addItem({
-    id: product.id,
-    title: product.title,
-    price: product.price,
-    image: product.image,
-    quantity: 1
-  })
-}
-
-onMounted(async () => {
-  await Promise.all([fetchProducts(), fetchCategories()])
-})
 </script>
+
 
 <style scoped>
 .card {

@@ -7,7 +7,7 @@
 </template>
 
 <script setup>
-// No props or setup needed for now
+
 </script>
 
 <style scoped>

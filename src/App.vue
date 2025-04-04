@@ -32,45 +32,13 @@ const handleSearch = () => {
 <template>
   <div class="min-h-screen flex flex-col">
     <Navbar />
-    <main class="container py-4 flex-grow">
+    <!-- <main class="container py-4 flex-grow"> -->
       <router-view></router-view>
-    </main>
+    
     <Footer />
   </div>
 </template>
 
 <style>
-body {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
 
-#app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-main {
-  flex: 1;
-}
-
-.footer {
-  margin-top: auto;
-}
-
-.nav-link {
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.nav-link:hover {
-  color: #0d6efd;
-}
-
-.navbar-brand {
-  font-weight: bold;
-  font-size: 1.5rem;
-}
 </style>

@@ -57,4 +57,5 @@ export default {
 .card-title {
   margin-bottom: 1rem;
 }
+
 </style> 
