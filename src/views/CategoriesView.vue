@@ -7,7 +7,7 @@
       <div v-for="category in categories" :key="category" class="col-md-3 mb-3">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title text-capitalize">{{ category }}</h5>
+            <h5 class="card-title ">{{ category }}</h5>
             <router-link 
               :to="`/products?category=${category}`" 
               class="btn btn-primary"
@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import { useCartStore } from '@/stores/cart'
+
 export default {
   name: 'CategoriesView',
   data() {
@@ -44,9 +46,10 @@ export default {
 }
 </script>
 
-<style scoped>
+<style >
 .card {
   transition: transform 0.2s;
+  border: 1px solid;
 }
 
 .card:hover {

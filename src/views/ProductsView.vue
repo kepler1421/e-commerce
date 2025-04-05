@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid">
     <div class="row">
-      <!-- Sidebar -->
+     
       <div class="col-md-3 mb-4">
         <div class="card">
           <div class="card-header">
@@ -28,7 +28,6 @@
         </div>
       </div>
 
-      <!-- Products Grid -->
       <div class="col-md-9">
         <div v-if="loading" class="text-center">
           <div class="spinner-border" role="status">
@@ -73,9 +72,26 @@ export default {
     }
   },
   computed: {
+    searchQuery() {
+      return this.$route.query.search || ''
+    },
     filteredProducts() {
-      if (!this.selectedCategory) return this.products
-      return this.products.filter(product => product.category === this.selectedCategory)
+      let filtered = this.products
+
+      if (this.selectedCategory) {
+        filtered = filtered.filter(product => product.category === this.selectedCategory)
+      }
+
+      if (this.searchQuery) {
+        const query = this.searchQuery.toLowerCase()
+        filtered = filtered.filter(product => 
+          product.title.toLowerCase().includes(query) ||
+          product.description.toLowerCase().includes(query) ||
+          product.category.toLowerCase().includes(query)
+        )
+      }
+
+      return filtered
     }
   },
   methods: {
@@ -117,6 +133,11 @@ export default {
   },
   async mounted() {
     await Promise.all([this.fetchProducts(), this.fetchCategories()])
+  },
+  watch: {
+    '$route.query.search'() {
+      this.fetchProducts()
+    }
   }
 }
 </script>

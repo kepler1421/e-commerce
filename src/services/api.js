@@ -3,7 +3,7 @@ import axios from 'axios'
 // Create an axios instance with default config
 const api = axios.create({
   baseURL: 'https://fakestoreapi.com',
-  timeout: 10000,
+  // timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
   }

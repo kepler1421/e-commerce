@@ -28,7 +28,7 @@
           <li class="nav-item">
             <router-link to="/cart" class="nav-link position-relative">
               <i class="bi bi-cart3 fs-5">Cart</i>
-              <span v-if="cartStore.totalItems" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              <span v-if="cartStore.totalItems" class="position-absolute start-50 translate-middle badge rounded-pill bg-danger">
                 {{ cartStore.totalItems }}
               </span>
             </router-link>
@@ -39,36 +39,43 @@
   </nav>
 </template>
 
-<script setup>
-import { ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+<script>
 import { useCartStore } from '@/stores/cart'
 
-const cartStore = useCartStore()
-const searchQuery = ref('')
-const router = useRouter()
-const route = useRoute()
-
-// Initialize search input from route query
-watch(() => route.query.search, (newSearch) => {
-  searchQuery.value = newSearch || ''
-}, { immediate: true })
-
-const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    router.push({
-      path: '/products',
-      query: { search: searchQuery.value.trim() }
-    })
-  } else {
-    // If search is empty, go to products page without query
-    router.push('/products')
+export default {
+  name: 'Navbar',
+  data() {
+    return {
+      searchQuery: '',
+      cartStore: useCartStore()
+    }
+  },
+  created() {
+    // Initialize search query from route
+    this.searchQuery = this.$route.query.search || ''
+  },
+  watch: {
+    '$route.query.search'(newValue) {
+      this.searchQuery = newValue || ''
+    }
+  },
+  methods: {
+    handleSearch() {
+      const query = this.searchQuery.trim()
+      if (query) {
+        this.$router.push({
+          path: '/products',
+          query: { search: query }
+        })
+      } else {
+        this.$router.push('/products')
+      }
+    }
   }
 }
 </script>
 
 <style scoped>
-
 .sticky-navbar {
     position: sticky;
     top: 0;
@@ -92,6 +99,4 @@ const handleSearch = () => {
   font-weight: bold;
   font-size: 1.5rem;
 }
-
-
 </style>
