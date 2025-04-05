@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid">
     <div class="row">
-      <!-- Sidebar -->
+     
       <div class="col-md-3 mb-4">
         <div class="card">
           <div class="card-header">
@@ -28,7 +28,6 @@
         </div>
       </div>
 
-      <!-- Products Grid -->
       <div class="col-md-9">
         <div v-if="loading" class="text-center">
           <div class="spinner-border" role="status">
@@ -43,21 +42,10 @@
 
         <div v-else class="row">
           <div v-for="product in filteredProducts" :key="product.id" class="col-md-4 mb-4">
-            <div class="card h-100">
-              <router-link :to="'/products/' + product.id" class="text-decoration-none">
-                <img :src="product.image" class="card-img-top p-3" :alt="product.title" style="height: 200px; object-fit: contain;">
-                <div class="card-body d-flex flex-column">
-                  <h5 class="card-title text-dark">{{ product.title }}</h5>
-                  <p class="card-text flex-grow-1 text-secondary">{{ product.description.substring(0, 100) }}...</p>
-                  <div class="d-flex justify-content-between align-items-center mt-auto">
-                    <span class="price">${{ product.price }}</span>
-                  </div>
-                </div>
-              </router-link>
-              <div class="card-footer bg-transparent border-top-0">
-                <button class="btn btn-primary w-100" @click="addToCart(product)">Add to Cart</button>
-              </div>
-            </div>
+            <ProductCard 
+              :product="product" 
+              @add-to-cart="addToCart"
+            />
           </div>
         </div>
       </div>
@@ -65,62 +53,95 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+<script>
+import { productApi } from '@/services/api'
+import ProductCard from '@/components/ProductCard.vue'
 import { useCartStore } from '@/stores/cart'
 
-const products = ref([])
-const categories = ref([])
-const selectedCategory = ref(null)
-const loading = ref(true)
-const error = ref(null)
-const cartStore = useCartStore()
+export default {
+  components: {
+    ProductCard
+  },
+  data() {
+    return {
+      products: [],
+      categories: [],
+      selectedCategory: null,
+      loading: true,
+      error: null
+    }
+  },
+  computed: {
+    searchQuery() {
+      return this.$route.query.search || ''
+    },
+    filteredProducts() {
+      let filtered = this.products
 
-const fetchCategories = async () => {
-  try {
-    const response = await fetch('https://fakestoreapi.com/products/categories')
-    categories.value = await response.json()
-  } catch (err) {
-    console.error('Error fetching categories:', err)
+      if (this.selectedCategory) {
+        filtered = filtered.filter(product => product.category === this.selectedCategory)
+      }
+
+      if (this.searchQuery) {
+        const query = this.searchQuery.toLowerCase()
+        filtered = filtered.filter(product => 
+          product.title.toLowerCase().includes(query) ||
+          product.description.toLowerCase().includes(query) ||
+          product.category.toLowerCase().includes(query)
+        )
+      }
+
+      return filtered
+    }
+  },
+  methods: {
+    async fetchProducts() {
+      try {
+        this.loading = true
+        const data = await productApi.getAllProducts()
+        this.products = data.map(product => ({
+          ...product,
+          rating: Math.floor(Math.random() * 5) + 1,
+          rating_count: Math.floor(Math.random() * 100)
+        }))
+      } catch (err) {
+        this.error = 'Failed to load products'
+      } finally {
+        this.loading = false
+      }
+    },
+    async fetchCategories() {
+      try {
+        this.categories = await productApi.getCategories()
+      } catch (err) {
+        console.error('Error loading categories:', err)
+      }
+    },
+    selectCategory(category) {
+      this.selectedCategory = category
+    },
+    addToCart(product) {
+      const cartStore = useCartStore()
+      cartStore.addItem({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        quantity: 1
+      })
+    }
+  },
+  async mounted() {
+    await Promise.all([this.fetchProducts(), this.fetchCategories()])
+  },
+  watch: {
+    '$route.query.search'() {
+      this.fetchProducts()
+    }
   }
 }
-
-const fetchProducts = async () => {
-  try {
-    loading.value = true
-    const response = await fetch('https://fakestoreapi.com/products')
-    if (!response.ok) throw new Error('Failed to fetch products')
-    products.value = await response.json()
-  } catch (err) {
-    error.value = 'Failed to load products'
-  } finally {
-    loading.value = false
-  }
-}
-
-const filteredProducts = computed(() => {
-  if (!selectedCategory.value) return products.value
-  return products.value.filter(product => product.category === selectedCategory.value)
-})
-
-const selectCategory = (category) => {
-  selectedCategory.value = category
-}
-
-const addToCart = (product) => {
-  cartStore.addItem({
-    id: product.id,
-    title: product.title,
-    price: product.price,
-    image: product.image,
-    quantity: 1
-  })
-}
-
-onMounted(async () => {
-  await Promise.all([fetchProducts(), fetchCategories()])
-})
 </script>
+
 
 <style scoped>
 .card {

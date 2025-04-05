@@ -61,7 +61,6 @@ import { useCartStore } from '@/stores/cart'
 const cartStore = useCartStore()
 
 const checkout = () => {
-  // Implement checkout logic here
   alert('Proceeding to checkout...')
 }
 </script>
