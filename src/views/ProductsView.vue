@@ -1,7 +1,6 @@
 <template>
   <div class="container-fluid">
     <div class="row">
-     
       <div class="col-md-3 mb-4">
         <div class="card">
           <div class="card-header">
@@ -59,6 +58,7 @@ import ProductCard from '@/components/ProductCard.vue'
 import { useCartStore } from '@/stores/cart'
 
 export default {
+  name: 'productsView',
   components: {
     ProductCard
   },
@@ -96,8 +96,9 @@ export default {
   },
   methods: {
     async fetchProducts() {
+      this.loading = true
+      this.error = null
       try {
-        this.loading = true
         const data = await productApi.getAllProducts()
         this.products = data.map(product => ({
           ...product,
@@ -142,7 +143,6 @@ export default {
 }
 </script>
 
-
 <style scoped>
 .card {
   transition: transform 0.2s;
@@ -186,4 +186,4 @@ export default {
   background-color: #0d6efd;
   border-color: #0d6efd;
 }
-</style> 
+</style>
